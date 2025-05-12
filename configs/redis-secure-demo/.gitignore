@@ -1,0 +1,24 @@
+# dotenv environment files
+.env
+.env.*
+
+# generated ACL file (never commit passwords!)
+users.acl
+
+# Python __pycache__ and compiled files
+__pycache__/
+*.py[cod]
+
+# IDE / Editor settings
+.vscode/
+.idea/
+
+# macOS system files
+.DS_Store
+
+# Logs
+*.log
+
+# Docker volumes (if stored locally)
+volumes/
+data/

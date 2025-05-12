@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:${REDIS_VERSION}
+    container_name: redis_secure
+    command: >
+      redis-server 
+      --requirepass "${REDIS_PASSWORD}" 
+      --bind "${REDIS_HOST}" 
+      --protected-mode yes 
+      --appendonly yes 
+      --loglevel warning
+      --aclfile /usr/local/etc/redis/users.acl
+    volumes:
+      - redis-data:/data
+      - ./users.acl:/usr/local/etc/redis/users.acl:ro
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:6379"
+    restart: unless-stopped
+
+volumes:
+  redis-data:

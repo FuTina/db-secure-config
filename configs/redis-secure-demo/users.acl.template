@@ -1,0 +1,2 @@
+user default off
+user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~app:* +@read +@write
