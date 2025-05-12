@@ -8,15 +8,41 @@ load_dotenv()
 
 host = os.getenv("REDIS_HOST", "localhost")
 port = int(os.getenv("REDIS_PORT", 6379))
-username = os.getenv("REDIS_USERNAME", "appuser")
-password = os.getenv("REDIS_PASSWORD")
+username = os.getenv("REDIS_APPUSER_USERNAME", "appuser")
+password = os.getenv("REDIS_APPUSER_PASSWORD")
+
+
+print("🔌 Connecting with:")
+print("  host:", os.getenv("REDIS_HOST"))
+print("  port:", os.getenv("REDIS_PORT"))
+print("  username:", os.getenv("REDIS_APPUSER_USERNAME"))
+print("  password:", os.getenv("REDIS_APPUSER_PASSWORD"))
+
+
+try:
+    r = redis.StrictRedis(
+        host=host,
+        port=port,
+        username=username,
+        password=password,
+        decode_responses=True
+    )
+    print("🔁 Testing connection with PING...")
+    print("✅ Redis PING response:", r.ping())
+except redis.exceptions.ConnectionError as e:
+    print("❌ Redis connection failed:", e)
+    exit(1)
+except redis.exceptions.AuthenticationError as e:
+    print("❌ Authentication failed:", e)
+    exit(1)
+
 
 r = redis.StrictRedis(
-    host=host,
-    port=port,
-    username=username,
-    password=password,
-    decode_responses=True,
+    host=os.getenv("REDIS_HOST", "127.0.0.1"),
+    port=int(os.getenv("REDIS_PORT", 6379)),
+    username=os.getenv("REDIS_APPUSER_USERNAME"),
+    password=os.getenv("REDIS_APPUSER_PASSWORD"),
+    decode_responses=True
 )
 
 print(r.ping())  # Sollte "True" zurückgeben
