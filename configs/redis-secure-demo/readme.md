@@ -1,7 +1,7 @@
 
 # 🔐 Redis Secure Setup with Docker Compose
 
-Dieses Projekt zeigt ein sicheres Setup von Redis mit Docker Compose – inklusive:
+Dieses Projekt zeigt ein sicheres Setup von Redis mit Docker Compose - inklusive:
 - Nur lokale Verbindung
 - Passwortschutz & ACLs (Benutzerrechte)
 - Beispieluser mit eingeschränkten Rechten
@@ -11,16 +11,6 @@ Dieses Projekt zeigt ein sicheres Setup von Redis mit Docker Compose – inklusi
 ## ⚙️ Voraussetzungen
 
 - **Docker** und **Docker Compose** installiert
-- **Python** (mind. Version 3.7) installiert und im `PATH` verfügbar  
-  Prüfe mit:
-  ```bash
-  python --version
-  ```
-  > Das Startskript verwendet den Befehl `python` (nicht `python3`).  
-  > Stelle sicher, dass du Python so aufrufst:
-  > ```bash
-  > python import.py
-  > ```
 
 ## 📁 Struktur
 
@@ -33,26 +23,31 @@ redis-secure-demo/
 ├── import.py
 ├── test_pub_sub.sh
 ├── start.sh
-└── README.md
+└── [README.md](http://_vscodecontentref_/0)
 ```
 
 ## 🚀 Starten
 
-1. **Passwörter in `.env` setzen**  
-   Passe die Passwörter und Usernamen in der Datei `.env` an.  
-   Diese Datei wird **nicht** ins Repository eingecheckt.
+1. Passwörter in .env setzen
+Passe die Passwörter und Usernamen in der Datei .env an.
+Diese Datei wird nicht ins Repository eingecheckt.
 
-2. **Redis & ACL automatisch starten**  
-   Das Skript `start.sh` liest die `.env`, generiert daraus die Datei `users.acl` und startet alles:
-   ```bash
+2. Redis & ACL automatisch starten
+Das Skript start.sh liest die .env, generiert daraus die Datei users.acl und startet alles:
+
+```
    ./start.sh
-   ```
+```
+---
+```
 
 3. **Verbindung testen**  
    Mit dem App-User aus der `.env`:
-   ```bash
-   redis-cli -u redis://$REDIS_APPUSER_USERNAME:$REDIS_APPUSER_PASSWORD@localhost:$REDIS_PORT
-   ```
+```
+---
+```
+redis-cli -u redis://$REDIS_APPUSER_USERNAME:$REDIS_APPUSER_PASSWORD@localhost:$REDIS_PORT
+```
 
 ## 🔐 Benutzer und ACL
 
@@ -61,6 +56,17 @@ Beispiel für einen User in der Template-Datei:
 ```
 user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~app:* +@read +@write
 ```
+
+Beispiel für eine vollständige users.acl.template:
+
+---
+```go
+user default on >${REDIS_PASSWORD} ~* +@all
+user ${REDIS_ADMIN_USERNAME} on >${REDIS_ADMIN_PASSWORD} ~* +@all
+user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~app:* +@read +@write +@connection +ping +select +info +client
+```
+---
+
 > **Hinweis:** Passe die Rechte und Präfixe nach Bedarf an.
 
 ## 🔑 Passwort-Management
@@ -72,31 +78,35 @@ user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~app:* +@read +@wri
 ## 🔁 Pub/Sub Beispiel
 
 **Terminal A:**
-```bash
+---
+```go
 docker exec -it redis_secure redis-cli -u redis://$REDIS_APPUSER_USERNAME:$REDIS_APPUSER_PASSWORD@localhost:$REDIS_PORT
 > SUBSCRIBE events
+---
 ```
+---
 
 **Terminal B:**
-```bash
+---
+```go
 docker exec -it redis_secure redis-cli -u redis://$REDIS_APPUSER_USERNAME:$REDIS_APPUSER_PASSWORD@localhost:$REDIS_PORT
 > PUBLISH events "Hello from Publisher"
+---
 ```
-
-## 🧪 Beispielimport (Python)
-
-```bash
-python import.py
-```
+---
 
 ## 🛑 Stoppen
 
-```bash
+---
+```go
 docker compose down
 docker compose down -v  # inkl. Volume löschen
+---
 ```
+---
 
 ---
 
 **Sicherheitshinweis:**  
 Verwende für Passwörter starke, zufällig generierte Werte. Teile `.env` niemals öffentlich!
+

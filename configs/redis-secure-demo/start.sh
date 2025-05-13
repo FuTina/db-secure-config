@@ -7,12 +7,12 @@ set -o allexport
 source .env
 set +o allexport
 
-echo "🧩 Using username: $REDIS_APPUSER_USERNAME"
-echo "🔐 Using password: $REDIS_APPUSER_PASSWORD"
+echo "🧩 Using username: $REDIS_USERNAME"
+echo "🔐 Using password: $REDIS_PASSWORD"
 
-if [[ -z "$REDIS_APPUSER_USERNAME" || -z "$REDIS_APPUSER_PASSWORD" ]]; then
-  echo "❌ Username or password not set. Check your .env file."
-  exit 1
+if [[ -z "$REDIS_USERNAME" || -z "$REDIS_PASSWORD" ]]; then
+    echo "❌ Username or password not set. Check your .env file."
+    exit 1
 fi
 
 echo "🛠 Generating users.acl from template ..."
@@ -22,10 +22,15 @@ cat users.acl
 echo "🐳 Starting Redis via Docker Compose ..."
 docker compose up -d
 
+
+function redis_safe() {
+    docker exec redis_secure redis-cli -u "redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@localhost:${REDIS_PORT}" "$@" 2>/dev/null
+}
+
 echo "⏳ Waiting for Redis to become ready ..."
 for i in {1..30}; do
     # Check if Redis is ready by executing a PING command
-    if docker exec redis_secure redis-cli -u "redis://${REDIS_APPUSER_USERNAME}:${REDIS_APPUSER_PASSWORD}@localhost:${REDIS_PORT}" PING | grep -q PONG; then
+    if redis_safe PING | grep -q PONG; then
         echo "✅ Redis is ready."
         break
     fi
@@ -33,7 +38,23 @@ for i in {1..30}; do
     sleep 1
 done
 
-echo "📥 Starting data import via import.py ..."
-python import.py
+echo "📥 Importing users_light.csv via redis-cli ..."
+
+tail -n +2 users_light.csv | while IFS=',' read -r id name email score; do
+    echo "→ Importing user ID $id: $name"
+    
+    redis_safe SET "user:$id:name" "$name"
+    redis_safe SET "user:$id:email" "$email"
+    redis_safe SET "user:$id:score" "$score"
+done
+
+echo "✅ CSV import completed."
+
+echo "🔒 Disabling default user for security ..."
+if redis_safe ACL SETUSER default off; then
+    echo "✅ default user successfully disabled."
+else
+    echo "❌ Failed to disable default user. Check permissions."
+fi
 
 echo "✅ Setup complete. Redis is running at 127.0.0.1:$REDIS_PORT"

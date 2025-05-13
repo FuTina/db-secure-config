@@ -7,10 +7,8 @@ services:
     command: >
       redis-server 
       --bind "${REDIS_HOST}" 
-      --protected-mode yes 
-      --appendonly yes 
+      --aclfile /usr/local/etc/redis/users.acl 
       --loglevel warning
-      --aclfile /usr/local/etc/redis/users.acl
     volumes:
       - redis-data:/data
       - ./users.acl:/usr/local/etc/redis/users.acl:ro
@@ -20,3 +18,4 @@ services:
 
 volumes:
   redis-data:
+    driver: local
