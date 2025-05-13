@@ -35,19 +35,19 @@ Diese Datei wird nicht ins Repository eingecheckt.
 2. Redis & ACL automatisch starten
 Das Skript start.sh liest die .env, generiert daraus die Datei users.acl und startet alles:
 
-```
-   ./start.sh
+---
+```go
+./start.sh
 ```
 ---
-```
 
 3. **Verbindung testen**  
    Mit dem App-User aus der `.env`:
-```
 ---
-```
+```go
 redis-cli -u redis://$REDIS_APPUSER_USERNAME:$REDIS_APPUSER_PASSWORD@localhost:$REDIS_PORT
 ```
+---
 
 ## 🔐 Benutzer und ACL
 
@@ -59,13 +59,11 @@ user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~app:* +@read +@wri
 
 Beispiel für eine vollständige users.acl.template:
 
----
-```go
+```
 user default on >${REDIS_PASSWORD} ~* +@all
 user ${REDIS_ADMIN_USERNAME} on >${REDIS_ADMIN_PASSWORD} ~* +@all
 user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~app:* +@read +@write +@connection +ping +select +info +client
 ```
----
 
 > **Hinweis:** Passe die Rechte und Präfixe nach Bedarf an.
 
