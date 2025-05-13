@@ -6,7 +6,6 @@ services:
     container_name: redis_secure
     command: >
       redis-server 
-      --requirepass "${REDIS_PASSWORD}" 
       --bind "${REDIS_HOST}" 
       --protected-mode yes 
       --appendonly yes 

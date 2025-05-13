@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7
+    container_name: redis_insecure
+    command: >
+      redis-server 
+      --requirepass "insecure123" 
+      --appendonly yes 
+      --loglevel warning
+    volumes:
+      - redis-data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    restart: unless-stopped
+
+volumes:
+  redis-data:
