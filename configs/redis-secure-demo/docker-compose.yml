@@ -6,15 +6,18 @@ services:
     container_name: redis_secure
     command: >
       redis-server 
-      --bind "${REDIS_HOST}" 
+      --bind "${REDIS_HOST}"
       --aclfile /usr/local/etc/redis/users.acl 
-      --loglevel warning
+      --appendonly yes
+      --loglevel notice
+    ports:
+      - "${REDIS_HOST}:${REDIS_PORT}:6379"
     volumes:
       - redis-data:/data
       - ./users.acl:/usr/local/etc/redis/users.acl:ro
-    ports:
-      - "127.0.0.1:${REDIS_PORT}:6379"
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true # verhindert Rechte-Eskalation
 
 volumes:
   redis-data:
