@@ -1,33 +1,36 @@
----
 services:
   weaviate:
     container_name: weaviate
-    command:
-    - --host
-    - 0.0.0.0
-    - --port
-    - '8080'
-    - --scheme
-    - http
     image: cr.weaviate.io/semitechnologies/weaviate:1.30.3
+    command:
+      - --host
+      - ${WEAVIATE_HOST}
+      - --port
+      - '${WEAVIATE_PORT}'
+      - --scheme
+      - ${WEAVIATE_SCHEME}
     ports:
-    - 8080:8080
-    - 50051:50051
+      - "${WEAVIATE_PORT}:${WEAVIATE_PORT}"
+      - "50051:50051"
     volumes:
-    - weaviate_data:/var/lib/weaviate
+      - weaviate_data:${WEAVIATE_DATA_PATH}
     restart: on-failure:0
     environment:
-      QUERY_DEFAULTS_LIMIT: 25
-      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      QUERY_DEFAULTS_LIMIT: ${WEAVIATE_QUERY_LIMIT}
+      PERSISTENCE_DATA_PATH: ${WEAVIATE_DATA_PATH}
       ENABLE_API_BASED_MODULES: 'true'
-      CLUSTER_HOSTNAME: 'node1'
+      CLUSTER_HOSTNAME: ${WEAVIATE_CLUSTER_HOSTNAME}
+
+      # Authentifizierung & Autorisierung
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'false'
       AUTHENTICATION_APIKEY_ENABLED: 'true'
       AUTHENTICATION_APIKEY_ALLOWED_KEYS: ${WEAVIATE_API_KEYS}
       AUTHENTICATION_APIKEY_USERS: ${WEAVIATE_API_USERS}
       AUTHORIZATION_ENABLE_RBAC: 'true'
       AUTHORIZATION_RBAC_ROOT_USERS: ${WEAVIATE_ROOT_USERS}
+
+      # Aktivierte Module (optional)
       ENABLE_MODULES: 'text2vec-ollama,generative-ollama'
+
 volumes:
   weaviate_data:
-...
