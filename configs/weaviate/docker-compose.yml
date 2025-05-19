@@ -27,6 +27,7 @@ services:
       AUTHENTICATION_APIKEY_USERS: ${WEAVIATE_API_USERS}
       AUTHORIZATION_ENABLE_RBAC: 'true'
       AUTHORIZATION_RBAC_ROOT_USERS: ${WEAVIATE_ROOT_USERS}
+      ENABLE_MODULES: 'text2vec-ollama,generative-ollama'
 volumes:
   weaviate_data:
 ...
