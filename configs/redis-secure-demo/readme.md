@@ -60,7 +60,7 @@ Beispiel für eine vollständige users.acl.template:
 ```bash
 user default on >${REDIS_PASSWORD} ~* +@all
 user ${REDIS_ADMIN_USERNAME} on >${REDIS_ADMIN_PASSWORD} ~* +@all
-user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~app:* +@read +@write +@connection +ping +select +info +client
+user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~user:* +@read +@write +@connection +ping +select +info +client
 ```
 
 > **Hinweis:** Passe die Rechte und Präfixe nach Bedarf an.
