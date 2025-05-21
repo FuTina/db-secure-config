@@ -58,4 +58,11 @@ echo "✅ CSV import completed."
 #     echo "❌ Failed to disable default user. Check permissions."
 # fi
 
-echo "✅ Setup complete. Redis is running at 127.0.0.1:$REDIS_PORT"
+echo ""
+echo "   ➤ Benutzername: $REDIS_ADMIN_USERNAME"
+echo "   ➤ Passwort:     $REDIS_ADMIN_PASSWORD"
+echo "   ➤ Redis-Host:   redis"
+echo "   ➤ Redis-Port:   6379"
+echo ""
+
+echo "✅ Setup complete. Redis läuft auf 127.0.0.1:$REDIS_PORT"

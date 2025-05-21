@@ -1,0 +1,50 @@
+services:
+  redis:
+    image: redis:${REDIS_VERSION}
+    container_name: redis_secure_tls
+
+    # Startet Redis ausschließlich über TLS (kein unverschlüsselter Port)
+    # deaktiviert unverschlüsselten Zugriff
+    # deaktiviert unverschlüsselten Zugriff
+    # Clients müssen CA vertrauen
+    # Passwort auf Verbindungs-Ebene
+    # Zugriffskontrolle
+    # persistente Speicherung
+    # empfehlenswertes Logging
+    command: >
+      redis-server
+      --port 0 
+      --tls-port 6379
+      --tls-cert-file /certs/redis.crt
+      --tls-key-file /certs/redis.key
+      --tls-ca-cert-file /certs/ca.crt
+      --tls-dh-params-file /certs/redis.dh
+      --tls-auth-clients yes  
+      --requirepass "${REDIS_ADMIN_PASSWORD}"  
+      --aclfile /usr/local/etc/redis/users.acl  
+      --appendonly yes  
+      --loglevel notice  
+
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:6379"  # lokal verfügbar, TLS-gesichert
+
+    volumes:
+      - redis-data:/data  # Redis-Daten
+      - ./certs:/certs:ro  # Zertifikate (readonly)
+      - ./users.acl:/usr/local/etc/redis/users.acl:ro  # ACL-Datei (readonly)
+
+    restart: unless-stopped
+
+    security_opt:
+      - no-new-privileges:true  # verhindert Rechte-Eskalation im Container
+
+    networks:
+      - redis_net  # separates Container-Netzwerk für weitere Dienste
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  redis_net:
+    driver: bridge
