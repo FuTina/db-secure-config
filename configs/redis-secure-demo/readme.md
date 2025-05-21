@@ -1,19 +1,22 @@
-
-# 🔐 Redis Secure Setup with Docker Compose
+# 🔐 Sicheres Redis-Setup mit Docker Compose
 
 Dieses Projekt zeigt ein sicheres Setup von Redis mit Docker Compose - inklusive:
 
-* Nur lokale Verbindung
+* Nur lokale Verbindung (`127.0.0.1`)
 * Passwortschutz & ACLs (Benutzerrechte)
-* Beispieluser mit eingeschränkten Rechten
+* Beispielnutzer mit eingeschränkten Rechten
 * Volle Persistenz mit AOF
 * Einfaches Starten & Testen per Skript
+
+---
 
 ## ⚙️ Voraussetzungen
 
 * **Docker** und **Docker Compose** installiert
 
-## 📁 Struktur
+---
+
+## 📁 Projektstruktur
 
 ```
 redis-secure-demo/
@@ -21,108 +24,162 @@ redis-secure-demo/
 ├── .env
 ├── users.acl.template
 ├── users.acl  # wird automatisch generiert
-├── import.py
-├── test_pub_sub.sh
+├── users_light.csv
+├── users.csv # größerer Umfang, längerer Import!
 ├── start.sh
+├── test_pub_sub.sh
 └── README.md
 ```
 
-## 🚀 Starten
+---
 
-1. Passwörter in .env setzen
-   Passe die Passwörter und Usernamen in der Datei `.env` an. Diese Datei wird nicht ins Repository eingecheckt.
+## 🚀 Start
 
-2. Redis & ACL automatisch starten
-   Das Skript `start.sh` liest die `.env`, generiert daraus die Datei `users.acl` und startet alles:
+1. **Passwörter in `.env` setzen**  
+  Erstellen und Anpassen der Environment-Variablen in bspw. `.env`, z. B.:
+
+```env
+REDIS_VERSION=7.2.4
+REDIS_PORT=6379
+REDIS_HOST=127.0.0.1
+REDIS_ADMIN_USERNAME=radmin
+REDIS_ADMIN_PASSWORD=SuperSecretAdminUser456
+REDIS_APPUSER_USERNAME=appuser
+REDIS_APPUSER_PASSWORD=SuperSecretAppUser456
+```
+
+2. **Start mit Skript**  
+   Das Skript `start.sh` übernimmt:
+   - Laden der `.env`
+   - Erzeugen der `users.acl` aus der `users.acl.template`
+   - Start von Redis mit Docker Compose
 
 ```bash
 ./start.sh
 ```
 
-3. **Verbindung testen**
-   Mit dem App-User aus der `.env`:
+---
 
-```bash
-redis-cli -u redis://$REDIS_APPUSER_USERNAME:$REDIS_APPUSER_PASSWORD@localhost:$REDIS_PORT
-```
+## 🔐 Benutzer & Rechte (ACL)
 
-## 🔐 Benutzer und ACL
+Die Datei `users.acl` wird bei jedem Start automatisch aus `users.acl.template` generiert.
 
-Die Datei `users.acl` wird bei jedem Start aus `users.acl.template` und den Werten aus `.env` generiert.
-Beispiel für einen User in der Template-Datei:
+Beispiel für die `users.acl.template`:
 
-```bash
-user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~app:* +@read +@write
-```
-
-Beispiel für eine vollständige users.acl.template:
-
-```bash
-user default on >${REDIS_PASSWORD} ~* +@all
+```acl
+user default off
 user ${REDIS_ADMIN_USERNAME} on >${REDIS_ADMIN_PASSWORD} ~* +@all
 user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~user:* +@read +@write +@connection +ping +select +info +client
 ```
 
-> **Hinweis:** Passe die Rechte und Präfixe nach Bedarf an.
+> ✏️ Die erlaubten Schlüsselbereiche (`~user:*`) und Befehle (`+@read`, etc.) können je nach Anwendung angepasst werden.
 
-## 🔑 Passwort-Management
+---
 
-* **Alle Passwörter werden zentral in `.env` gepflegt.**
-* Die Datei `.env` ist in `.gitignore` eingetragen und wird nicht ins Repository eingecheckt.
-* Die ACL-Datei wird automatisch aus der Template-Datei und den `.env`-Werten erzeugt.
+## 🐳 Docker-Konfiguration (`docker-compose.yml`)
 
-## 🗃️ Benutzer-Datenstruktur & Import
+```yaml
+version: "3.8"
 
-Beim Start des Projekts wird `users_light.csv` automatisch importiert. Die Nutzerdaten werden in folgendem Format gespeichert:
+services:
+  redis:
+    image: redis:${REDIS_VERSION}
+    container_name: redis_secure
+    command: >
+      redis-server 
+      --bind "${REDIS_HOST}"
+      --aclfile /usr/local/etc/redis/users.acl 
+      --appendonly yes
+      --loglevel notice
+    ports:
+      - "${REDIS_HOST}:${REDIS_PORT}:6379"  # 127.0.0.1
+    volumes:
+      - redis-data:/data
+      - ./users.acl:/usr/local/etc/redis/users.acl:ro
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
 
-* `user:<id>:name` → Benutzername (Vor- und Nachname)
-* `user:<id>:email` → E-Mail-Adresse
-* `user:<id>:score` → Punktestand (integer)
-
-### 🔄 Manuelles Setzen von Daten
-
-```bash
-redis-cli -u redis://<username>:<password>@127.0.0.1:6379 SET user:42:name "Alice Example"
-redis-cli -u redis://<username>:<password>@127.0.0.1:6379 SET user:42:email "alice@example.com"
-redis-cli -u redis://<username>:<password>@127.0.0.1:6379 SET user:42:score 555
+volumes:
+  redis-data:
+    driver: local
 ```
 
-### 🔍 Manuelles Abfragen von Daten
+---
+
+## 🔑 Verbindung testen
+
+Mit dem App-User (aus `.env`):
 
 ```bash
-redis-cli -u redis://<username>:<password>@127.0.0.1:6379 GET user:42:name
-redis-cli -u redis://<username>:<password>@127.0.0.1:6379 GET user:42:email
-redis-cli -u redis://<username>:<password>@127.0.0.1:6379 GET user:42:score
+redis-cli -u "redis://${REDIS_APPUSER_USERNAME}:${REDIS_APPUSER_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}"
 ```
 
-> 🔐 Hinweis: Bei aktivierter ACL ist `username` + `password` erforderlich.
+Mit dem Admin-User:
+
+```bash
+redis-cli -u "redis://${REDIS_ADMIN_USERNAME}:${REDIS_ADMIN_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}"
+```
+
+---
+
+## 📥 Datenimport & Struktur
+
+Beim Start des Projekts wird `users_light.csv` automatisch importiert. Struktur:
+
+| Redis-Schlüssel       | Inhalt                  |
+|------------------------|-------------------------|
+| `user:<id>:name`       | Benutzername            |
+| `user:<id>:email`      | E-Mail-Adresse          |
+| `user:<id>:score`      | Punktestand (Zahl)      |
+
+### 🔄 Manuelles Setzen
+
+```bash
+redis-cli -u "redis://<username>:<passwort>@${REDIS_HOST}:${REDIS_PORT}" SET user:42:name "Alice Beispiel"
+```
+
+### 🔍 Manuelles Abfragen
+
+```bash
+redis-cli -u "redis://<username>:<passwort>@${REDIS_HOST}:${REDIS_PORT}" GET user:42:name
+```
+
+---
 
 ## 🔁 Pub/Sub Beispiel
 
 **Terminal A:**
 
 ```bash
-docker exec -it redis_secure redis-cli -u redis://$REDIS_APPUSER_USERNAME:$REDIS_APPUSER_PASSWORD@localhost:$REDIS_PORT
+docker exec -it redis_secure redis-cli -u "redis://${REDIS_APPUSER_USERNAME}:${REDIS_APPUSER_PASSWORD}@localhost:${REDIS_PORT}"
 > SUBSCRIBE events
 ```
 
 **Terminal B:**
 
 ```bash
-docker exec -it redis_secure redis-cli -u redis://$REDIS_APPUSER_USERNAME:$REDIS_APPUSER_PASSWORD@localhost:$REDIS_PORT
-> PUBLISH events "Hello from Publisher"
+docker exec -it redis_secure redis-cli -u "redis://${REDIS_APPUSER_USERNAME}:${REDIS_APPUSER_PASSWORD}@localhost:${REDIS_PORT}"
+> PUBLISH events "Hallo vom Publisher"
 ```
+
+---
 
 ## 🛑 Stoppen
 
 ```bash
 docker compose down
-# inkl. Volume löschen:
+# inkl. Volumes löschen:
 docker compose down -v
 ```
 
 ---
 
-**Sicherheitshinweis:**
-Verwende für Passwörter starke, zufällig generierte Werte. Teile `.env` niemals öffentlich!
+## 🔐 Sicherheitshinweise
 
+- Verwende starke, zufällig generierte Passwörter (z. B. `pwgen`, `openssl rand`)
+- `.env` niemals ins Repository einchecken
+- Redis nur lokal oder in einem privaten Docker-Netzwerk zugänglich machen
+- `user default off` verhindert ungewollte Zugriffe
+
+---

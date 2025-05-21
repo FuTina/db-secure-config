@@ -7,10 +7,11 @@ set -o allexport
 source .env
 set +o allexport
 
-echo "🧩 Using username: $REDIS_USERNAME"
-echo "🔐 Using password: $REDIS_PASSWORD"
+echo "🧩 Using username: $REDIS_ADMIN_USERNAME"
+echo "🔐 Using password: $REDIS_ADMIN_PASSWORD"
+# default user is disabled
 
-if [[ -z "$REDIS_USERNAME" || -z "$REDIS_PASSWORD" ]]; then
+if [[ -z "$REDIS_ADMIN_USERNAME" || -z "$REDIS_ADMIN_PASSWORD" ]]; then
     echo "❌ Username or password not set. Check your .env file."
     exit 1
 fi
@@ -24,7 +25,7 @@ docker compose up -d
 
 
 function redis_safe() {
-    docker exec redis_secure redis-cli -u "redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@localhost:${REDIS_PORT}" "$@" 2>/dev/null
+    docker exec redis_secure redis-cli -u "redis://${REDIS_ADMIN_USERNAME}:${REDIS_ADMIN_PASSWORD}@localhost:${REDIS_PORT}" "$@" 2>/dev/null
 }
 
 echo "⏳ Waiting for Redis to become ready ..."
@@ -50,11 +51,11 @@ done
 
 echo "✅ CSV import completed."
 
-echo "🔒 Disabling default user for security ..."
-if redis_safe ACL SETUSER default off; then
-    echo "✅ default user successfully disabled."
-else
-    echo "❌ Failed to disable default user. Check permissions."
-fi
+# echo "🔒 Disabling default user for security ..."
+# if redis_safe ACL SETUSER default off; then
+#     echo "✅ default user successfully disabled."
+# else
+#     echo "❌ Failed to disable default user. Check permissions."
+# fi
 
 echo "✅ Setup complete. Redis is running at 127.0.0.1:$REDIS_PORT"

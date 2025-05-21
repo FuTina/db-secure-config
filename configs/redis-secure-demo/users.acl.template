@@ -1,3 +1,3 @@
-user default on >${REDIS_PASSWORD} ~* +@all
+user default off
 user ${REDIS_ADMIN_USERNAME} on >${REDIS_ADMIN_PASSWORD} ~* +@all
 user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~user:* +@read +@write +@connection +ping +select +info +client
