@@ -5,17 +5,8 @@ Diese Datei beschreibt empfohlene **sichere Einstellungen** für die Nutzung von
 **Quellen:**
 
 * [Weaviate Docker Compose Docs](https://weaviate.io/developers/weaviate/installation/docker-compose?docker-compose=auth)
-* [Umgebungsvariablen (env-vars)](https://weaviate.io/developers/weaviate/configuration/env-vars)
-* [Auth & API-Key Login](https://weaviate.io/developers/weaviate/configuration/authentication/apikey)
-* [RBAC & Autorisierung](https://weaviate.io/developers/weaviate/configuration/authorization/rbac)
-* [Modulübersicht](https://weaviate.io/developers/weaviate/modules/overview)
-* [OpenAI Modul](https://weaviate.io/developers/weaviate/modules/third-party/openai)
-* [Ollama Modul](https://weaviate.io/developers/weaviate/modules/third-party/ollama)
-* [Production Best Practices](https://weaviate.io/developers/weaviate/enterprise/production-best-practices)
-* [TLS/HTTPS Setup](https://weaviate.io/developers/weaviate/guides/https-setup)
-* [Logging & Monitoring](https://weaviate.io/developers/weaviate/guides/logging-monitoring)
-* [Backup & Restore](https://weaviate.io/developers/weaviate/backup-restore)
-* [Multi-Tenancy](https://weaviate.io/developers/weaviate/concepts/multi-tenancy)
+* [Weaviate Documentation](https://weaviate.io/developers/weaviate)
+* [Best Practices](https://weaviate.io/developers/weaviate/best-practices))
 
 ---
 
