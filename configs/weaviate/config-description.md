@@ -1,59 +1,91 @@
-# ⚙️ Weaviate Docker-Compose Konfigurationsparameter
+# 🧾 Weaviate Config – Docker Compose & Sicherheitsoptionen
 
-Diese Datei beschreibt **sämtliche Konfigurationsparameter**, die innerhalb der `docker-compose.yml` für Weaviate genutzt werden können – insbesondere im Kontext von **Authentifizierung**, **Autorisierung**, **Modulen**, **Speicher** und **Netzwerk**.
+Diese Datei beschreibt empfohlene **sichere Einstellungen** für die Nutzung von **Weaviate mit Docker Compose**, inklusive Konfigurationsparametern für Authentifizierung, Autorisierung, API-Module, Speicherpfade und Netzwerk.
 
-Quelle: [Weaviate Docker-Compose Doku](https://weaviate.io/developers/weaviate/installation/docker-compose?docker-compose=auth)
+**Quellen:**
 
----
-
-## 🧾 Allgemeine Parameter (Weaviate)
-
-| Variable                   | Beschreibung                                                                 | Beispielwert(e)                                                          |
-| -------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `QUERY_DEFAULTS_LIMIT`     | Anzahl der Standard-Ergebnisse bei Abfragen                                  | `25`, `100`                                                              |
-| `PERSISTENCE_DATA_PATH`    | Pfad für persistente Daten im Container                                      | `/var/lib/weaviate`                                                      |
-| `CLUSTER_HOSTNAME`         | Name dieses Cluster-Knotens (für Raft intern)                                | `node1`                                                                  |
-| `ENABLE_API_BASED_MODULES` | Aktiviert die Nutzung von API-basierten Modulen (z. B. OpenAI, Ollama, etc.) | `true`, `false`                                                          |
-| `ENABLE_MODULES`           | Komma-separierte Liste aktivierter Module                                    | `text2vec-openai,generative-openai`, `text2vec-ollama,generative-ollama` |
-
----
-
-## 🔐 Authentifizierung
-
-| Variable                                  | Beschreibung                                            | Beispielwert                |
-| ----------------------------------------- | ------------------------------------------------------- | --------------------------- |
-| `AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED` | Ob anonymer Zugriff erlaubt ist                         | `false` (empfohlen), `true` |
-| `AUTHENTICATION_APIKEY_ENABLED`           | API-Key-Authentifizierung aktivieren                    | `true`, `false`             |
-| `AUTHENTICATION_APIKEY_ALLOWED_KEYS`      | Komma-separierte API-Keys, die gültig sind              | `supersecretkey1,key2,key3` |
-| `AUTHENTICATION_APIKEY_USERS`             | Komma-separierte Benutzer, die den Keys zugeordnet sind | `admin,reader,userx`        |
-
-> **Hinweis:** Die Reihenfolge von `ALLOWED_KEYS` und `USERS` muss identisch sein (1:1-Zuordnung).
+* [Weaviate Docker Compose Docs](https://weaviate.io/developers/weaviate/installation/docker-compose?docker-compose=auth)
+* [Umgebungsvariablen (env-vars)](https://weaviate.io/developers/weaviate/configuration/env-vars)
+* [Auth & API-Key Login](https://weaviate.io/developers/weaviate/configuration/authentication/apikey)
+* [RBAC & Autorisierung](https://weaviate.io/developers/weaviate/configuration/authorization/rbac)
+* [Modulübersicht](https://weaviate.io/developers/weaviate/modules/overview)
+* [OpenAI Modul](https://weaviate.io/developers/weaviate/modules/third-party/openai)
+* [Ollama Modul](https://weaviate.io/developers/weaviate/modules/third-party/ollama)
+* [Production Best Practices](https://weaviate.io/developers/weaviate/enterprise/production-best-practices)
+* [TLS/HTTPS Setup](https://weaviate.io/developers/weaviate/guides/https-setup)
+* [Logging & Monitoring](https://weaviate.io/developers/weaviate/guides/logging-monitoring)
+* [Backup & Restore](https://weaviate.io/developers/weaviate/backup-restore)
+* [Multi-Tenancy](https://weaviate.io/developers/weaviate/concepts/multi-tenancy)
 
 ---
 
-## 🔓 Autorisierung (RBAC)
+## ⚙️ Beispielhafte `docker-compose.yml`
 
-| Variable                        | Beschreibung                                     | Beispielwert    |
-| ------------------------------- | ------------------------------------------------ | --------------- |
-| `AUTHORIZATION_ENABLE_RBAC`     | Rollenbasiertes Zugriffsmodell aktivieren        | `true`, `false` |
-| `AUTHORIZATION_RBAC_ROOT_USERS` | Nutzer mit vollen Adminrechten (Komma-separiert) | `admin`         |
+```yaml
+version: '3.4'
+services:
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    ports:
+      - "8080:8080"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'false'
+      AUTHENTICATION_APIKEY_ENABLED: 'true'
+      AUTHENTICATION_APIKEY_ALLOWED_KEYS: 'supersecretapikey123'
+      AUTHENTICATION_APIKEY_USERS: 'admin'
+      AUTHORIZATION_ENABLE_RBAC: 'true'
+      AUTHORIZATION_RBAC_ROOT_USERS: 'admin'
+      ENABLE_API_BASED_MODULES: 'true'
+      ENABLE_MODULES: 'text2vec-ollama,generative-ollama'
+      TEXT2VEC_OLLAMA_BASEURL: 'http://ollama:11434'
+      TEXT2VEC_OLLAMA_MODEL: 'llama3'
+      GENERATIVE_OLLAMA_BASEURL: 'http://ollama:11434'
+      GENERATIVE_OLLAMA_MODEL: 'llama3'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
 
----
+depends_on:
+  - ollama
 
-## 🧠 Modulkonfigurationen (Beispiele)
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
 
-> Nur erforderlich, wenn `ENABLE_MODULES` gesetzt ist. Beispiel: `text2vec-ollama`, `generative-openai` etc.
-
-### Für Ollama (lokal)
-
-```env
-TEXT2VEC_OLLAMA_BASEURL=http://host.docker.internal:11434
-TEXT2VEC_OLLAMA_MODEL=llama3
-GENERATIVE_OLLAMA_BASEURL=http://host.docker.internal:11434
-GENERATIVE_OLLAMA_MODEL=llama3
+volumes:
+  weaviate_data:
 ```
 
-### Für OpenAI
+---
+
+## 🔐 Sicherheitsempfehlungen
+
+| Einstellung                               | Zweck                                | Empfehlung            |
+| ----------------------------------------- | ------------------------------------ | --------------------- |
+| `AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED` | Zugriff ohne Login                   | `false`               |
+| `AUTHENTICATION_APIKEY_ENABLED`           | Zugriff nur mit API-Key              | `true`                |
+| `AUTHORIZATION_ENABLE_RBAC`               | Rollensystem aktivieren              | `true`                |
+| `AUTHORIZATION_RBAC_ROOT_USERS`           | Admin-Accounts                       | Nur gezielt angeben   |
+| `ENABLE_API_BASED_MODULES`                | Fremd-APIs ermöglichen (OpenAI etc.) | Nur bei Bedarf `true` |
+
+---
+
+## 📄 Allgemeine Parameter
+
+| Variable                   | Beschreibung                        | Beispielwert                        |
+| -------------------------- | ----------------------------------- | ----------------------------------- |
+| `QUERY_DEFAULTS_LIMIT`     | Standard-Ergebnisse bei Queries     | `25`, `100`                         |
+| `PERSISTENCE_DATA_PATH`    | Datenpfad innerhalb des Containers  | `/var/lib/weaviate`                 |
+| `CLUSTER_HOSTNAME`         | Hostname im Cluster (Raft)          | `node1`                             |
+| `ENABLE_API_BASED_MODULES` | Nutzung von API-basierten Modulen   | `true`, `false`                     |
+| `ENABLE_MODULES`           | Kommagetrennte Liste aktiver Module | `text2vec-ollama,generative-ollama` |
+
+---
+
+## 🧠 Modulkonfiguration (Beispiele)
+
+### OpenAI
 
 ```env
 OPENAI_APIKEY=sk-abc...
@@ -63,26 +95,24 @@ GENERATIVE_OPENAI_APIKEY=$OPENAI_APIKEY
 GENERATIVE_OPENAI_MODEL=gpt-4
 ```
 
-> Hinweis: Bei OpenAI-Modulen muss `ENABLE_MODULES` z. B. auf `text2vec-openai,generative-openai` gesetzt werden.
+### Ollama (Docker-Compose interner Service)
+
+```env
+TEXT2VEC_OLLAMA_BASEURL=http://ollama:11434
+TEXT2VEC_OLLAMA_MODEL=llama3
+GENERATIVE_OLLAMA_BASEURL=http://ollama:11434
+GENERATIVE_OLLAMA_MODEL=llama3
+```
 
 ---
 
-## 🗃️ Volumes und Pfade
+## 🌐 Netzwerkparameter
 
-| Variable                | Beschreibung                                 | Beispielwert        |
-| ----------------------- | -------------------------------------------- | ------------------- |
-| `PERSISTENCE_DATA_PATH` | Interner Speicherort in der Weaviate-Instanz | `/var/lib/weaviate` |
-| Volume-Name (Compose)   | Name des Docker-Volumes                      | `weaviate_data:`    |
-
----
-
-## 🌐 Netzwerk
-
-| Variable          | Beschreibung                               | Beispielwert    |
-| ----------------- | ------------------------------------------ | --------------- |
-| `WEAVIATE_HOST`   | IP oder Host, auf dem der Dienst lauscht   | `0.0.0.0`       |
-| `WEAVIATE_PORT`   | Port, auf dem Weaviate bereitgestellt wird | `8080`          |
-| `WEAVIATE_SCHEME` | Protokoll                                  | `http`, `https` |
+| Variable          | Beschreibung     | Beispielwert    |
+| ----------------- | ---------------- | --------------- |
+| `WEAVIATE_HOST`   | IP oder Hostname | `0.0.0.0`       |
+| `WEAVIATE_PORT`   | HTTP-Port        | `8080`          |
+| `WEAVIATE_SCHEME` | Protokoll        | `http`, `https` |
 
 ---
 
@@ -103,12 +133,9 @@ WEAVIATE_ROOT_USERS=wadmin
 
 # Module
 ENABLE_MODULES=text2vec-ollama,generative-ollama
-TEXT2VEC_OLLAMA_BASEURL=http://host.docker.internal:11434
+TEXT2VEC_OLLAMA_BASEURL=http://ollama:11434
 TEXT2VEC_OLLAMA_MODEL=llama3
-GENERATIVE_OLLAMA_BASEURL=http://host.docker.internal:11434
+GENERATIVE_OLLAMA_BASEURL=http://ollama:11434
 GENERATIVE_OLLAMA_MODEL=llama3
 ```
 
----
-
-> Tipp: Verwende `docker compose --env-file .env up -d`, um alle Parameter bequem auszulagern und flexibel zu steuern.
