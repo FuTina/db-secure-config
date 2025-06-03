@@ -1,3 +1,7 @@
 user default off
-user ${REDIS_ADMIN_USERNAME} on >${REDIS_ADMIN_PASSWORD} ~* +@all
+user ${REDIS_ADMIN_USERNAME} on >${REDIS_ADMIN_PASSWORD} ~* +@all &*
 user ${REDIS_APPUSER_USERNAME} on >${REDIS_APPUSER_PASSWORD} ~user:* +@read +@write +@connection +ping +select +info +client
+user ${REDIS_ROUSER_USERNAME} on >${REDIS_ROUSER_PASSWORD} ~user:* +@read +@connection +ping +select +info +client
+user ${REDIS_WOUSER_USERNAME} on >${REDIS_WOUSER_PASSWORD} ~user:* +@write +@connection +ping +select +info +client
+user ${REDIS_CHANNEL_USERNAME} on >${REDIS_CHANNEL_PASSWORD} +@connection +ping +subscribe +psubscribe &* ~*
+user ${REDIS_CHANNEL_USERNAME1} on >${REDIS_CHANNEL_PASSWORD1} +@connection +ping +subscribe +psubscribe +publish &* ~*

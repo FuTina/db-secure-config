@@ -20,6 +20,7 @@ echo "🛠 Generating users.acl from template ..."
 envsubst < users.acl.template > users.acl
 cat users.acl
 
+echo "..."
 echo "🐳 Starting Redis via Docker Compose ..."
 docker compose up -d
 
